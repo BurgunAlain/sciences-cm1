@@ -84,7 +84,7 @@ h1{font-size:clamp(1.3rem,3vw,2rem);line-height:1.1;margin:0}.sub{margin-top:4px
         <path d="M736 278 H818 M818 278 l-12 -10 M818 278 l-12 10"/>
       </g>
 
-      <polygon id="shadow" points="420,350 440,350 440,362 420,362" fill="var(--shadow)" opacity=".82" stroke="#223038" stroke-opacity=".35" stroke-width="1.5"/>
+      <polygon id="shadow" points="420,350 440,350 440,362 420,362" fill="var(--shadow)" opacity=".9" stroke="#1e2a30" stroke-opacity=".5" stroke-width="1.5"/>
       <g id="stick">
         <rect x="421" y="224" width="18" height="126" rx="4" fill="#8a5c38" stroke="#624027" stroke-width="2"/>
         <line x1="430" y1="229" x2="430" y2="345" stroke="#b98256" stroke-width="3" opacity=".65"/>
@@ -153,17 +153,22 @@ function draw(v){
  sun.setAttribute('transform',`translate(${p.x} ${p.y})`);
  rays.setAttribute('transform',`translate(${p.x} ${p.y})`);
 
- const h=Math.max(55,groundY-p.y);
- const centerZone=Math.abs(value-50)<=5;
- if(centerZone){
-   const nearL=baseX-9,nearR=baseX+9,tipL=baseX-5,tipR=baseX+5;
-   shadow.setAttribute('points',`${nearL},352 ${nearR},352 ${tipR},370 ${tipL},370`);
+ // Projection continue : l’ombre diminue progressivement jusqu’à midi,
+ // tombe exactement dans l’axe du bâton à 50, puis repart de l’autre côté.
+ const h=Math.max(1,groundY-p.y);
+ const stickHeight=126;
+ let signedLen=stickHeight*(baseX-p.x)/h;
+ signedLen=Math.max(-315,Math.min(315,signedLen));
+
+ const nearL=baseX-11, nearR=baseX+11;
+ if(Math.abs(signedLen)<1){
+   // À midi pile : petite ombre centrée au pied du bâton.
+   shadow.setAttribute('points',`${baseX-11},352 ${baseX+11},352 ${baseX+7},362 ${baseX-7},362`);
  }else{
-   const dir=p.x<baseX?1:-1;
-   const len=Math.min(315,Math.max(44,21500/h));
-   const tip=baseX+dir*len;
-   const nearL=baseX-10,nearR=baseX+10,tipA=tip-dir*9,tipB=tip+dir*9;
-   shadow.setAttribute('points',`${nearL},352 ${nearR},352 ${tipB},368 ${tipA},368`);
+   const tip=baseX+signedLen;
+   const dir=Math.sign(signedLen);
+   const tipA=tip-dir*8, tipB=tip+dir*8;
+   shadow.setAttribute('points',`${nearL},352 ${nearR},352 ${tipB},367 ${tipA},367`);
  }
 }
 function ptrValue(e){const pt=scene.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=scene.getScreenCTM();if(!m)return value;const local=pt.matrixTransform(m.inverse());return((local.x-92)/676)*100}
